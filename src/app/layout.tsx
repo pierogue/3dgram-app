@@ -11,8 +11,8 @@ import './_assets/globals.css';
 import { Header } from '@/components/Header/Header';
 
 export const metadata: Metadata = {
-  title: 'Your Application Title Goes Here',
-  description: 'Your application description goes here',
+  title: '3Dgram',
+  description: '3Dgram is a social media platform that allows you to share your 3D models with your friends and family.',
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {

@@ -2,17 +2,19 @@
 
 import { Page } from "@/components/Page"
 import ThreeScene from "@/components/ThreeScene/ThreeScene"
+import { downloadDto } from "@/dto/downloadDto"
 import { likeDto } from "@/dto/likeDto"
-import { modelDto } from "@/dto/modelDto"
+import { modelDetailsDto, modelDto } from "@/dto/modelDto"
 import { useServer } from "@/hooks/useServer"
 import { RootState } from "@/store/store"
-import { mainButton, openLink, retrieveLaunchParams } from "@telegram-apps/sdk-react"
-import { Avatar, AvatarStack, Button, Cell, Headline, Spinner, Subheadline } from "@telegram-apps/telegram-ui"
+import { initData, mainButton, openLink, retrieveLaunchParams, useSignal } from "@telegram-apps/sdk-react"
+import { Avatar, AvatarStack, Button, Cell, Headline, IconButton, Spinner, Subheadline, Text } from "@telegram-apps/telegram-ui"
 import axios from "axios"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import styled from "styled-components"
+import { useRouter } from "next/navigation"
 
 type Props = {
   params: {
@@ -23,6 +25,7 @@ type Props = {
 const Scene = styled.div`
   width: 100%;
   height: 80vh;
+  position: relative;
 `
 
 const PageWrapper = styled.div`
@@ -32,6 +35,7 @@ const PageWrapper = styled.div`
 export default function ModelPage ({params: { modelId }}:Props) {
 
   const [likes, setLikes] = useState<likeDto[] | null>([]);
+  const [downloads, setDownloads] = useState<downloadDto[] | null>([]);
   const [model, setModel] = useState<modelDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -42,14 +46,16 @@ export default function ModelPage ({params: { modelId }}:Props) {
   );
   const apiUrl:string|undefined= process.env.NEXT_PUBLIC_API_URL;
   const lp = retrieveLaunchParams()
-
+  const initDataState = useSignal(initData.state);
+  const router = useRouter();
   const { 
     getModel,
     postDownload,
     getModelLikes,
     postLike,
     deleteLike,
-    blockUser
+    blockUser,
+    getDownloads
   } = useServer()
 
   const handleDownload = async () => {
@@ -58,12 +64,14 @@ export default function ModelPage ({params: { modelId }}:Props) {
         tryBrowser: 'chrome',
         tryInstantView: true,
       });
+      
       await postDownload(modelId, currentUser?.userId!!)
     }
   }    
 
   const handleBlock = async ()=>{
     await blockUser(model?.owner.userId!!, !model?.owner.blocked)
+    router.back()
   }
 
   
@@ -136,6 +144,7 @@ export default function ModelPage ({params: { modelId }}:Props) {
       try {
         const response = await getModelLikes(modelId);
         setLikes(response.data);
+        console.log(likes)
       } catch (error) {
         setError('Error fetching likes');
       } finally {
@@ -143,9 +152,21 @@ export default function ModelPage ({params: { modelId }}:Props) {
       }
     };
 
+    const fetchDownloads = async ()=>{
+      try{
+        const response = await getDownloads(modelId);
+        setDownloads(response.data);
+      } catch (error) {
+        setError('Error fetching downloads');
+      } finally {
+        setLoading(false);
+      }
+    }
+
     const initialize = async () => {
       await fetchModel();
       await fetchLikes();
+      await fetchDownloads();
     };
     initialize();
   }, [currentLike?.likeID])
@@ -167,8 +188,8 @@ export default function ModelPage ({params: { modelId }}:Props) {
         <Scene>
           <ThreeScene model={model}/>
         </Scene>
-        <Headline style={{margin: "16px 16px 8px 16px"}}>{model?.title}</Headline>
-        <Link href={`/user/${model?.owner.userId}`}>
+        <Headline style={{margin: "16px 16px 8px 16px", width: '90%', overflow: "hidden", wordBreak: 'break-word'}}>{model?.title}</Headline>
+        <Link href={`/user-page/${model?.owner.userId}`}>
           <Cell before={
               <Avatar src={model?.owner.avatarUrl} size={28}/>
             }
@@ -182,12 +203,13 @@ export default function ModelPage ({params: { modelId }}:Props) {
               size="s" style={{backgroundColor:lp.themeParams.destructive_text_color}}>Заблокировать</Button> :
               <></>
             }>
-            <span style={{fontSize: 14, color: lp.themeParams.text_color}}>
+            <span style={{fontSize: 14, color: 'var(--tg-theme-link-color)'}}>
               {model?.owner.name}
             </span>
           </Cell>
         </Link>
-        <Subheadline style={{margin: "8px 16px 16px 16px", color: lp.themeParams.text_color}}>{model?.description}</Subheadline>
+        <Subheadline style={{margin: "8px 16px 16px 16px", color: lp.themeParams.text_color, width: '90%', wordBreak: 'break-word'}}>{model?.description}</Subheadline>
+        <Text style={{fontSize: "12px" , margin: "8px 16px 16px 16px", color: 'var(--tg-theme-subtitle-text-color)'}}>{new Date(model?.createdAt!).toDateString()}</Text>
         <Cell before={
           <Button onClick={toggleLike} size="s" style={{backgroundColor: lp.themeParams.accent_text_color}}>
             <>
@@ -207,6 +229,11 @@ export default function ModelPage ({params: { modelId }}:Props) {
           <span style={{fontSize: 13, color: lp.themeParams.text_color}}>
             Понравилось {likes?.length} {(likes?.length ?? 0) % 10 === 1 && (likes?.length ?? 0) % 100 !== 11? ' пользователю' : ' пользователям'}
           </span>
+        </Cell>
+        <Cell>
+            <span style={{fontSize: 13, color: lp.themeParams.text_color}}>
+            Скачали {downloads?.length} {(downloads?.length ?? 0) % 10 === 1 && (downloads?.length ?? 0) % 100 !== 11 ? ' раз' : (downloads?.length ?? 0) % 10 >= 2 && (downloads?.length ?? 0) % 10 <= 4 && ((downloads?.length ?? 0) % 100 < 10 || (downloads?.length ?? 0) % 100 >= 20) ? ' раза' : ' раз'}
+            </span>
         </Cell>
       </PageWrapper>
     </Page>

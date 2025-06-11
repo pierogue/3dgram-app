@@ -7,7 +7,8 @@ export type modelDto = {
   title:string,
   description:string,
   modelUrl:string,
-  owner: userDto
+  owner: userDto,
+  createdAt: Date
 }
 
 export type modelDetailsDto = {
@@ -15,6 +16,7 @@ export type modelDetailsDto = {
   title:string,
   description:string,
   modelUrl:string,
+  createdAt: Date,
   downloads: downloadDto[],
   likes: likeDto[]
 }

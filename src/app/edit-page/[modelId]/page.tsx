@@ -2,7 +2,7 @@
 
 import { retrieveLaunchParams } from "@telegram-apps/sdk-react"
 import { Button, Input, Spinner, Textarea } from "@telegram-apps/telegram-ui"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import styled from "styled-components"
 import ThreeScene from "@/components/ThreeScene/ThreeScene"
 import { modelDto } from "@/dto/modelDto"
@@ -11,6 +11,7 @@ import { RootState } from "@/store/store"
 import { mainButton } from '@telegram-apps/sdk-react';
 import { useServer } from "@/hooks/useServer"
 import { Page } from "@/components/Page"
+import { useRouter } from "next/navigation"
 
 const Scene = styled.div`
   width: 100%;
@@ -32,34 +33,43 @@ export default function EditPage({params: {modelId}}: Props) {
   const [model, setModel] = useState<modelDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [title, setTitle] = useState<string | null>(null)
-  const [description, setDescription] = useState<string | null>(null)
+  const [title, setTitle] = useState<string | null>(null);
+  const [description, setDescription] = useState<string | null>(null);
   const currentUser = useSelector((state: RootState) => 
     state.user.currentUser
   );
+  const router = useRouter();
 
   const {
     getModel,
     deleteModel,
     patchModel
-  } = useServer()
+  } = useServer();
 
-  const lp = retrieveLaunchParams()
-  
-  const handleTitle = (e: React.ChangeEvent<HTMLInputElement>)=>{
+  const lp = retrieveLaunchParams();
+
+  const titleRef = useRef<string | null>(title);
+  const descriptionRef = useRef<string | null>(description);
+
+  useEffect(() => {
+    titleRef.current = title;
+    descriptionRef.current = description;
+  }, [title, description]);
+
+  const handleTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
-  }
+  };
 
-  const handleDescription = (e: React.ChangeEvent<HTMLInputElement>)=>{
+  const handleDescription = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
-  }
+  };
 
-  const handleDelete = () => {
-    // axios.delete(`${apiUrl}/models/${modelId}`)
-    if( currentUser?.userId === model?.owner.userId ) {
-      deleteModel(modelId)
+  const handleDelete = async () => {
+    if (currentUser?.userId === model?.owner.userId) {
+      deleteModel(modelId);
+      router.back();
     } 
-  }
+  };
 
   useEffect(() => {
     if (model) {
@@ -68,7 +78,7 @@ export default function EditPage({params: {modelId}}: Props) {
     }
   }, [model]);
 
-  useEffect(()=>{
+  useEffect(() => {
     if (mainButton.mount.isAvailable()) {
       mainButton.mount();
       mainButton.setParams({
@@ -78,20 +88,29 @@ export default function EditPage({params: {modelId}}: Props) {
         isVisible: true,
         text: 'Сохранить',
       });
-      mainButton.onClick(async ()=>{
-        if(title && description){
-          await patchModel({modelId, title,description})
-        }
-      })
     }
 
-    return (()=>{
+    const handleMainButtonClick = async () => {
+      if (titleRef.current && descriptionRef.current) {
+        try {
+          const updatedModel = await patchModel({ modelId, title: titleRef.current, description: descriptionRef.current });
+          setModel(updatedModel.data);
+          router.push('/');
+        } catch (error) {
+          setError('Error updating model');
+        }
+      }
+    };
+
+    mainButton.onClick(handleMainButtonClick);
+
+    return () => {
       mainButton.setParams({
         isVisible: false,
       });
       mainButton.unmount();
-    })
-  },[model, lp, title, description])
+    };
+  }, []); // No dependencies here
 
   useEffect(() => {
     const fetchModel = async () => {
@@ -110,11 +129,11 @@ export default function EditPage({params: {modelId}}: Props) {
     };
 
     initialize();
-  }, [])
+  }, []);
 
   if (loading) return <Spinner size="m"/>;
   if (error) return <div>{error}</div>;
-
+  
   return (
     <Page back={true}>
       <PageWrapper>
@@ -126,8 +145,8 @@ export default function EditPage({params: {modelId}}: Props) {
           style={{backgroundColor: "var(--tg-theme-destructive-text-color)"}}>
             Удалить
           </Button>
-        } onChange={handleTitle} header='Название' value={''+title}/>
-        <Textarea onChange={handleDescription} header={'Описание'} value={''+description}></Textarea>
+        } maxLength={50} onChange={handleTitle} header='Название' defaultValue={title || ''} />
+        <Textarea maxLength={100} onChange={handleDescription} defaultValue={description || ''} header={'Описание'}></Textarea>
       </PageWrapper>
     </Page>
   )

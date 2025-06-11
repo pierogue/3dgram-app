@@ -5,10 +5,6 @@ import { PropsWithChildren, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function Page({ children, back = true }: PropsWithChildren<{
-  /**
-   * True if it is allowed to go back from this page.
-   * @default true
-   */
   back?: boolean
 }>) {
   const router = useRouter();

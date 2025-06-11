@@ -120,6 +120,7 @@ export const Filter = () => {
         </SummaryLabel>
       </AccordionSummary>
       <AccordionContent>
+        <form onSubmit={(e)=>e.preventDefault()}>
         <Input placeholder="Поиск моделей" onChange={handleSearch}/>
         {currentUser?.role.roleName === 'MODERATOR' && (
           <>
@@ -128,6 +129,7 @@ export const Filter = () => {
             onChange={handleNewCategory} value={newCategory ?? ''}/>
           </>
         )}
+        </form>
         {categories.map((category)=>{
           return <>
             <Cell

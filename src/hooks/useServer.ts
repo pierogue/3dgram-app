@@ -77,7 +77,11 @@ export const useServer = ()=> {
   }
 
   const postModelCover = async (modelId: number, file: Buffer) => {
-    return await axios.postForm(`${apiUrl}/models/${modelId}/cover`,{file})
+    return await axios.postForm(`${apiUrl}/models/${modelId}/cover`,{file:file})
+  }
+
+  const getDownloads = async (modelId: number) => {
+    return await axios.get(`${apiUrl}/downloads/model/${modelId}`)
   }
 
   const postDownload = async (modelId: number, userId: string) => {
@@ -150,6 +154,7 @@ export const useServer = ()=> {
     getCategoryCount,
     fetchCurrentUser,
     postCategory,
-    deleteCategory
+    deleteCategory,
+    getDownloads
   }
 }

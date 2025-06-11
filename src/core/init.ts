@@ -1,5 +1,6 @@
 import {
   backButton,
+  retrieveLaunchParams,
   viewport,
   themeParams,
   miniApp,
@@ -26,6 +27,11 @@ export function init(debug: boolean): void {
   initData.restore();
   void viewport.mount().then(() => {
     viewport.bindCssVars();
+    if(retrieveLaunchParams().platform === 'android' || retrieveLaunchParams().platform === 'ios') {
+      viewport.expand();
+      
+      // viewport.requestFullscreen();
+    }
   }).catch(e => {
     console.error('Something went wrong mounting the viewport', e);
   });
@@ -35,7 +41,7 @@ export function init(debug: boolean): void {
   themeParams.bindCssVars();
 
   // Add Eruda if needed.
-  debug && import('eruda')
-    .then((lib) => lib.default.init())
-    .catch(console.error);
+  // debug && import('eruda')
+  //   .then((lib) => lib.default.init())
+  //   .catch(console.error);
 }

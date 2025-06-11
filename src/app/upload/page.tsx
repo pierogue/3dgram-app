@@ -11,12 +11,13 @@ import { RootState } from "@/store/store";
 import { popup } from "@telegram-apps/sdk-react";
 import { modelDto } from "@/dto/modelDto";
 import { useServer } from "@/hooks/useServer"
+import { Page } from "@/components/Page"
+import { useRouter } from "next/navigation"
 
 const PageWrapper = styled.div`
   width: 100%;
   display: flex;
   flex-flow: column;
-
 `
 
 export default function UploadPage() {
@@ -28,11 +29,11 @@ export default function UploadPage() {
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  // const navigate = useNavigate();
+
+  const router = useRouter();
   const currentUser = useSelector((state: RootState )=>
     state.user.currentUser
   );
-  // const apiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
 
   const { 
     getCategories,
@@ -69,7 +70,6 @@ export default function UploadPage() {
   const handleCategory = (e: React.ChangeEvent<HTMLSelectElement>)=>{
     setCategoryId(+e.target.value);
   }
-
   
   const handleUpload = async ()=>{
     if(currentUser?.blocked === true) 
@@ -97,39 +97,41 @@ export default function UploadPage() {
     })
     setLoading(false);
     const resModel : modelDto = response.data;
-    // navigate(`/edit/${resModel.modelID}`)
+    router.push(`/edit-page/${resModel.modelID}`)
   }
 
   if (loading) return <Spinner size="m"/>;
   if (error) return <div>{error}</div>;
 
   return (
-    <PageWrapper>
-      <div style={{display: 'flex', flexFlow: 'row', padding: 20, gap: 20}}>
-        <Image
-          style={{width: 200, height: 200, minWidth: 200}}
-          src={"/images/archive_structure.png"}
-        />
-        <Text>
-        Загрузите архив с моделью в формате zip и убедитесь, что он соответствует структуре.
-        </Text>
-      </div>
-      <FileInput required={true} label={file?.name ?? "Загрузите файл"} onChange={handleFile}/>
-      <Input required={true} header="Название" onChange={handleTitle}/>
-      <Select header="Категория" onChange={handleCategory}>
-        {categories.map((ctg)=>{
-          return <option value={ctg.categoryID}>{ctg.categoryName}</option>
-        })}
-      </Select>
-      <Textarea required={false} header="Описание" onChange={handleDescription}/>
-      <Button
-        mode="filled"
-        size="l"
-        style={{margin: 18}}
-        onClick={handleUpload}
-      >
-        Загрузить
-      </Button>
-    </PageWrapper>
+    <Page back={true}>
+      <PageWrapper>
+        <div style={{display: 'flex', flexFlow: 'row', padding: 20, gap: 20}}>
+          <Image
+            style={{width: 200, height: 200, minWidth: 200}}
+            src={"/images/archive_structure.png"}
+          />
+          <Text>
+          Загрузите архив с моделью в формате zip и убедитесь, что он соответствует структуре.
+          </Text>
+        </div>
+        <FileInput accept=".zip" required={true} label={file?.name ?? "Загрузите файл"} onChange={handleFile}/>
+        <Input maxLength={50} required={true} header="Название" onChange={handleTitle}/>
+        <Select header="Категория" onChange={handleCategory} defaultValue={categories[0].categoryID}>
+          {categories.map((ctg)=>{
+            return <option value={ctg.categoryID}>{ctg.categoryName}</option>
+          })}
+        </Select>
+        <Textarea maxLength={100} required={false} header="Описание" onChange={handleDescription}/>
+        <Button
+          mode="filled"
+          size="l"
+          style={{margin: 18}}
+          onClick={handleUpload}
+        >
+          Загрузить
+        </Button>
+      </PageWrapper>
+    </Page>
   )
 }

@@ -42,12 +42,9 @@ export default function UserPage({ params: { userId } }: Props) {
     state.user.currentUser
   );
   const { 
-    fetchCurrentUser,
     getUser,
     getUserModels
   } = useServer()
-  
-  // fetchCurrentUser()
 
   useEffect(()=>{
 
