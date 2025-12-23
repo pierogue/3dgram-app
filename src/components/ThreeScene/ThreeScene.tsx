@@ -46,8 +46,7 @@ const InteractiveThreeScene: React.FC<{ model: modelDto | null }> = ({ model }) 
   const [cameraS, setCamera] = useState<THREE.PerspectiveCamera | null>(null);
   const [sceneS, setScene] = useState<THREE.Scene | null>(null);
   const [controlsS, setControls] = useState<OrbitControls | null>(null);
-  const [flash, setFlash] = useState(false); // 👈 Состояние для вспышки
-
+  const [flash, setFlash] = useState(false);
   const currentUser = useSelector((state: RootState) => state.user.currentUser);
   let clock = new THREE.Clock();
   let mixer: THREE.AnimationMixer;
@@ -80,9 +79,7 @@ const InteractiveThreeScene: React.FC<{ model: modelDto | null }> = ({ model }) 
     if (!currentMount) return;
 
     const scene = new THREE.Scene();
-    setScene(scene);
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
-    setCamera(camera);
     const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     setRenderer(renderer);
     renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
@@ -93,11 +90,10 @@ const InteractiveThreeScene: React.FC<{ model: modelDto | null }> = ({ model }) 
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
-    setControls(controls);
 
     const loader = new GLTFLoader();
     loader.load(
-      `${apiUrl}/static/${model?.modelID}/scene.gltf`,
+      `${model?.modelUrl}`,
       (gltf) => {
         const loadedModel = gltf.scene;
         scene.add(loadedModel);

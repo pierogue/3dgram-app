@@ -21,6 +21,7 @@ import store from '@/store/store';
 import './styles.css';
 import { Provider, useDispatch } from 'react-redux';
 import { setCurrentUser } from '@/store/userSlice';
+import * as THREE from 'three'
 
 function RootInner({ children }: PropsWithChildren) {
   const isDev = process.env.NODE_ENV === 'development';
@@ -47,6 +48,9 @@ function RootInner({ children }: PropsWithChildren) {
     initDataUser && setLocale(initDataUser.languageCode);
     // initDataUser && dispatch(setCurrentUser())
   }, [initDataUser]);
+
+  // Enable caching for 3d models
+  THREE.Cache.enabled = true;
 
   return (
     // <TonConnectUIProvider manifestUrl="/tonconnect-manifest.json">

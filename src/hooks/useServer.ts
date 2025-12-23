@@ -45,6 +45,10 @@ export const useServer = ()=> {
     return await axios.get(`${apiUrl}/models/${modelId}`);
   }
 
+  const getModelFiles = async (modelId: number) => {
+    return await axios.get(`${apiUrl}/models/${modelId}/files`)
+  }
+
   const postModel = async (model: {
     title: string,
     description: string,
@@ -78,6 +82,10 @@ export const useServer = ()=> {
 
   const postModelCover = async (modelId: number, file: Buffer) => {
     return await axios.postForm(`${apiUrl}/models/${modelId}/cover`,{file:file})
+  }
+
+  const getModelCover = async (modelId: number) => {
+    return await axios.get(`${apiUrl}/models/${modelId}/cover`)
   }
 
   const getDownloads = async (modelId: number) => {
@@ -142,11 +150,13 @@ export const useServer = ()=> {
     postLike,
     deleteLike,
     getModel,
+    getModelFiles,
     getUserModels,
     postModel,
     deleteModel,
     patchModel,
     postModelCover,
+    getModelCover,
     postDownload,
     getModelLikes,
     getCategories,

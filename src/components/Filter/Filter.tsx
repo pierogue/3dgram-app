@@ -11,6 +11,7 @@ import { RootState } from "../../store/store";
 import axios from "axios";
 import { initData, popup, retrieveLaunchParams, useSignal } from "@telegram-apps/sdk-react";
 import { useServer } from "@/hooks/useServer";
+import { usePrivileges } from "@/hooks/usePrivileges";
 
 const SummaryLabel = styled.div`
   svg {
@@ -34,9 +35,7 @@ export const Filter = () => {
   const [categories, setCategoriesState] = useState<categoryLightDto[]>([]);
   const [newCategory, setNewCategory] = useState<string | null>(null);
   const apiUrl:string|undefined= process.env.NEXT_PUBLIC_API_URL;
-  const currentUser = useSelector((state: RootState) => 
-    state.user.currentUser
-  );
+  const { canManageCategories } = usePrivileges();
 
   const {
     getCategories,
@@ -122,7 +121,7 @@ export const Filter = () => {
       <AccordionContent>
         <form onSubmit={(e)=>e.preventDefault()}>
         <Input placeholder="Поиск моделей" onChange={handleSearch}/>
-        {currentUser?.role.roleName === 'MODERATOR' && (
+        {canManageCategories() && (
           <>
             <Divider />
             <Input after={<Button size="s" onClick={handleAddCategory}>+</Button>} placeholder="Добавить категорию" 
@@ -133,9 +132,9 @@ export const Filter = () => {
         {categories.map((category)=>{
           return <>
             <Cell
-              Component={currentUser?.role.roleName === 'MODERATOR' ? 'div' : 'label'}
+              Component={canManageCategories() ? 'div' : 'label'}
               before={
-                currentUser?.role.roleName === 'MODERATOR' ?
+                canManageCategories() ?
                 <DeleteButton mode="plain" onClick={()=>handleDeleteCategory(category.categoryID)}>Удалить</DeleteButton>
                 : <></>
             }

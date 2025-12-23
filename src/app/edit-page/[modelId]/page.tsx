@@ -10,6 +10,7 @@ import { useSelector } from "react-redux"
 import { RootState } from "@/store/store"
 import { mainButton } from '@telegram-apps/sdk-react';
 import { useServer } from "@/hooks/useServer"
+import { usePrivileges } from "@/hooks/usePrivileges"
 import { Page } from "@/components/Page"
 import { useRouter } from "next/navigation"
 
@@ -35,10 +36,8 @@ export default function EditPage({params: {modelId}}: Props) {
   const [loading, setLoading] = useState<boolean>(true);
   const [title, setTitle] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
-  const currentUser = useSelector((state: RootState) => 
-    state.user.currentUser
-  );
   const router = useRouter();
+  const { canDeleteModel } = usePrivileges();
 
   const {
     getModel,
@@ -60,12 +59,12 @@ export default function EditPage({params: {modelId}}: Props) {
     setTitle(e.target.value);
   };
 
-  const handleDescription = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDescription = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
   };
 
   const handleDelete = async () => {
-    if (currentUser?.userId === model?.owner.userId) {
+    if (canDeleteModel(model)) {
       deleteModel(modelId);
       router.back();
     } 
@@ -110,7 +109,7 @@ export default function EditPage({params: {modelId}}: Props) {
       });
       mainButton.unmount();
     };
-  }, []); // No dependencies here
+  }, []);
 
   useEffect(() => {
     const fetchModel = async () => {
